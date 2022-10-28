@@ -253,7 +253,7 @@ class GridSystemClient {
         this.uiContext.font = "20px Courier";
         this.uiContext.fillStyle = "white";
 
-        this.uiContext.fillText(`X-32 Scimitar`, 20, 30);
+        this.uiContext.fillText(`Icarus-III`, 20, 30);
         // this.uiContext.fillText(this.areaTitle, 20, 30);
         //this.uiContext.canvas.style.border = "2px solid green";
 
