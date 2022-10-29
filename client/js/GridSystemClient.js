@@ -88,7 +88,7 @@ class GridSystemClient {
         const center = this.getTopLeftFromUIContext();
         this.outlineContext.canvas.style.marginLeft = center.x;
         this.outlineContext.canvas.style.marginTop = center.y;
-        this.outlineContext.canvas.style.background = "#222";
+        this.outlineContext.canvas.style.background = "#333";
     }
     topContextSettings() {
         this.topContext.canvas.width = 270;
