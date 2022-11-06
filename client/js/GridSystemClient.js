@@ -88,6 +88,7 @@ class GridSystemClient {
         const center = this.getTopLeftFromUIContext();
         this.outlineContext.canvas.style.marginLeft = center.x;
         this.outlineContext.canvas.style.marginTop = center.y;
+        //this.outlineContext.canvas.style.background = "transparent";
         this.outlineContext.canvas.style.background = "#333";
     }
     topContextSettings() {
@@ -180,8 +181,17 @@ class GridSystemClient {
 
         const getPlayerObject = this.playersArr.find(object => object.lable === cellVal);
         if (getPlayerObject) {
-            color = getPlayerObject.color;
+            
             playerId = getPlayerObject.id;
+
+            color = getPlayerObject.color;
+            if (getPlayerObject.id === nickname && getPlayerObject.invisible === true) {
+                color = getPlayerObject.invisibleColor;
+            } else if (getPlayerObject.invisible === true){
+                color = "#111";
+            }
+            
+            
         }
 
         const getItemObject = this.itemsArr.find(object => object.itemLable === cellVal);
@@ -192,6 +202,7 @@ class GridSystemClient {
         return { color, playerId, itemId };
     }
     renderBlankCell(cellDetail, row, col) {
+        //this.outlineContext.globalAlpha = 0.2;
         this.outlineContext.fillStyle = cellDetail.color;
         this.outlineContext.fillRect(col * (this.cellSize + this.padding),
             row * (this.cellSize + this.padding),
@@ -203,7 +214,7 @@ class GridSystemClient {
 
         if (this.students.includes(cellDetail.playerId)) {
             this.outlineContext.font = "13px Times New Roman";
-            this.outlineContext.fillStyle = "black";
+            this.outlineContext.fillStyle = "#111";
             this.outlineContext.fillText(cellDetail.playerId, col * (this.cellSize + this.padding) + 1,
                 row * (this.cellSize + this.padding) + 18);
         }
@@ -212,10 +223,16 @@ class GridSystemClient {
         const getItemObject = this.itemsArr.find(object => object.itemId === cellDetail.itemId);
         if (getItemObject === undefined) return;
 
+        // this.outlineContext.fillStyle = "#555";
+        // this.outlineContext.fillRect(col * (this.cellSize + this.padding),
+        //     row * (this.cellSize + this.padding),
+        //     this.cellSize, this.cellSize);
+
         this.outlineContext.font = getItemObject.font;
 
         this.outlineContext.fillText(getItemObject.itemId, col * (this.cellSize + this.padding) + 3,
             row * (this.cellSize + this.padding) + getItemObject.rowValue);
+
     }
 
     setSignBoards(signNum, signText) {

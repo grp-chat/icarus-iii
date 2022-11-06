@@ -53,27 +53,30 @@ class GridSystem {
             37: {x: -1, y: 0},
             39: {x: 1, y: 0},
             38: {x: 0, y: -1},
-            40: {x: 0, y: 1}
+            40: {x: 0, y: 1},
         }
+        this.team1OriginPosition = [{x:10, y:10, area: "area1"}];
+        this.team2OriginPosition = [{x:10, y:10, area: "area1"}];
 
-        //this.extraArr = ["TCR", "LOK", "LK", "JHA", "JV", "JL", "SZF", "H", "TJY", "KX"];
-        //this.extraArr = ["TCR", "JX", "JZ", "TWN", "LJY", "LSH", "ELI", "CUR", "RYD", "CT"];
-        this.extraArr = ["TCR", "LOK", "KSY", "KN", "JT", "CJH", "CED", "KX", "TJY", "LSH"];
+        //this.extraArr = ["TCR", "LOK", "LK", "JHA", "JV", "CJH", "SZF", "JHA", "TJY", "KX"];
+        //this.extraArr = ["TCR", "JX", "JZ", "TWN", "LJY", "ELI", "CUR", "RYD", "CT", "LK", "JV"];
+        this.extraArr = ["TCR", "LOK", "JHA", "KN", "JT", "CJH", "CED", "KX", "TJY", "LSH", "SZF"];
 
         //this.p1 = { x: 1, y: 1, lable: 2, id: this.extraArr[0], steps: this.startingSteps, area: "mainArea", wallet: 0, total: 0, storeSteps: 1000 };
         // this.playersArr = [this.p1, this.p2, this.p3, this.p4, this.p5, this.p6, this.p7, this.p8, this.p9, this.p10];
         this.playersArr = [
-            this.p1 = new Player({x: 23, y: 10, lable: 2, id: this.extraArr[0], area: "area1", color: "grey"}),
+            this.p1 = new Player({x: 17, y: 18, lable: 2, id: this.extraArr[0], area: "area1", color: "grey", steps: 500}),
 
             this.p2 = new Player({x: 3, y: 11, lable: 3, id: this.extraArr[1], area: "area1", color: "springgreen"}),
             this.p3 = new Player({x: 3, y: 12, lable: 4, id: this.extraArr[2], area: "area1", color: "orange"}),
             this.p4 = new Player({x: 3, y: 13, lable: 5, id: this.extraArr[3], area: "area1", color: "lightblue"}),
-            this.p5 = new Player({x: 3, y: 14, lable: 6, id: this.extraArr[4], area: "area1", color: "lightyellow"}),
+            this.p5 = new Player({x: 3, y: 14, lable: 6, id: this.extraArr[4], area: "area1", color: "moccasin"}),
             this.p6 = new Player({x: 3, y: 15, lable: 7, id: this.extraArr[5], area: "area1", color: "deepskyblue"}),
             this.p7 = new Player({x: 4, y: 10, lable: 8, id: this.extraArr[6], area: "area1", color: "white"}),
-            this.p8 = new Player({x: 5, y: 10, lable: 9, id: this.extraArr[7], area: "area1", color: "magenta"}),
+            this.p8 = new Player({x: 5, y: 10, lable: 9, id: this.extraArr[7], area: "area1", color: "hotpink"}),
             this.p9 = new Player({x: 6, y: 10, lable: 10, id: this.extraArr[8], area: "area1", color: "teal"}),
-            this.p10 = new Player({x: 7, y: 10, lable: 11, id: this.extraArr[9], area: "area1", color: "yellow"})
+            this.p10 = new Player({x: 7, y: 10, lable: 11, id: this.extraArr[9], area: "area1", color: "yellow"}),
+            this.p11 = new Player({x: 7, y: 12, lable: 12, id: this.extraArr[10], area: "area1", color: "turquoise"})
         ];
 
         this.itemsArr = [
@@ -91,9 +94,15 @@ class GridSystem {
             this.item12 = new Item({itemLable: 30, itemId: "🔒", returnValue: false}),
         ];
 
+        this.powerList = {
+            1: {powerName: "invisibility", duration: 10000, offPowerName: "invisibilityOff", title: "Invisibility"},
+            2: {powerName: "scanner"},
+        }
+
         this.playersArr.forEach((player) => {
             player.maxSteps = this.maxSteps;
             this.startingPoint(player);
+
         });
     }
 
@@ -107,6 +116,10 @@ class GridSystem {
 
         if (cellVal  === 0) return true;
 
+        if(plyrSlot.team === "2") {
+            this.isThereAPlayer(cellVal, plyrSlot);
+        }
+        
         return this.isThereAnItem(cellVal, plyrSlot);
         //return false;
     }
@@ -114,7 +127,7 @@ class GridSystem {
         const getItemObject = this.itemsArr.find(object => object.itemLable === cellVal);
         if (getItemObject === undefined) return false;
 
-        if(getItemObject.itemId === "🔒") io.emit('chat-to-clients', `${plyrSlot.id} touched a lock`);;
+        if(getItemObject.itemId === "🔒") io.emit('chat-to-clients', `${plyrSlot.id} touched a lock`);
 
         if (getItemObject.returnValue === false) return false;
         if (plyrSlot.inventory.length >= plyrSlot.maxInventory) return false;
@@ -122,7 +135,32 @@ class GridSystem {
         plyrSlot.inventory += getItemObject.itemId 
         return getItemObject.returnValue;
     }
+    isThereAPlayer(cellVal, plyrSlot) {
+        const getAdjacentPlayerObject = this.playersArr.find(object => object.lable === cellVal);
+        if (getAdjacentPlayerObject === undefined || getAdjacentPlayerObject.team != "1") return;
+
+        io.emit('chat-to-clients', `${plyrSlot.id} captured ${getAdjacentPlayerObject.id}`);
+        
+        this.resetPosition(getAdjacentPlayerObject);
+    }
     
+    resetPosition(plyrSlot) {
+        
+        this.matrix = this.allMatrixes[plyrSlot.area].gridMatrix;
+        
+        this.matrix[plyrSlot.y][plyrSlot.x] = 0;
+
+        this.updMatrixForPlayerAtThisSpot(plyrSlot)
+
+        plyrSlot.x = plyrSlot.originX;
+        plyrSlot.y = plyrSlot.originY;
+        plyrSlot.area = plyrSlot.originArea;
+
+        this.matrix = this.allMatrixes[plyrSlot.area].gridMatrix;
+
+        this.matrix[plyrSlot.y][plyrSlot.x] = plyrSlot.lable;
+        
+    }
     updPosition(keyCode, plyrSlot) {
 
         if (this.keyCodes[keyCode] === undefined) return;
@@ -175,6 +213,7 @@ class GridSystem {
         if (this.isValidMove(plyrSlot, this.keyCodes[keyCode].x, this.keyCodes[keyCode].y)) {
             this.updPosition(keyCode, plyrSlot);
             plyrSlot.steps--;
+            plyrSlot.invisibilityStepCheck();
         }
     }
 
@@ -205,6 +244,10 @@ class GridSystem {
 
     setPlayerTeam(plyrSlot, team) {
         plyrSlot.team = team;
+
+        if (plyrSlot.team === "1") {
+            plyrSlot.obtainedPowers.push(this.powerList[1]);
+        }
     }
 
     resetMap() {
@@ -258,13 +301,20 @@ io.sockets.on('connection', function (sock) {
     sock.on('chat-to-server', (data) => {
         io.emit('chat-to-clients', data);
     });
+    sock.on('clearChatObject', data => {
+        const getPlayerObject = gridSystem.playersArr.find(object => object.id === data);
+        
+        const { id } = getPlayerObject;
+        io.emit('clearChatObject', id);
+
+    });
     sock.on('createChatObject', data => {
         const getPlayerObject = gridSystem.playersArr.find(object => object.id === data.nickname);
         const message = data.message2;
         
         const { x, y, area, id } = getPlayerObject;
         const matrixHeight = gridSystem.allMatrixes[area].gridMatrix.length;
-        const matrixLength = gridSystem.allMatrixes[area].gridMatrix[0].length
+        const matrixLength = gridSystem.allMatrixes[area].gridMatrix[0].length;
         io.emit('createChatObject', { x, y, message, id, matrixHeight, matrixLength });
         
     });
@@ -338,6 +388,53 @@ io.sockets.on('connection', function (sock) {
         const getPlayerObject = gridSystem.playersArr.find(object => object.id === data.studentId);
         gridSystem.setPlayerTeam(getPlayerObject, data.getNum);
         gridSystem.emitToUsers('sendMatrix');
+    });
+
+    sock.on('usePower', data => {
+        const playerObjectKey = getPlayerObjectKey(data.playerId);
+        const selectedPower = parseInt(data.extractNum) - 1
+
+        if(gridSystem[playerObjectKey].obtainedPowers[selectedPower] === undefined) return;
+        if(gridSystem[playerObjectKey].canUsePower === false) return;
+
+
+        const word = gridSystem[playerObjectKey].obtainedPowers[selectedPower].powerName;
+        const wordOff = gridSystem[playerObjectKey].obtainedPowers[selectedPower].offPowerName;
+        const duration = gridSystem[playerObjectKey].obtainedPowers[selectedPower].duration;
+        
+        //gridSystem[playerObjectKey].callPower(selectedPower);
+        gridSystem[playerObjectKey][word]();
+        //gridSystem[playerObjectKey].invisibilityOff();
+        //console.log(gridSystem[playerObjectKey].obtainedPowers);
+        gridSystem.emitToUsers('sendMatrix');
+
+        if (gridSystem[playerObjectKey][wordOff] === undefined) return;
+        gridSystem[playerObjectKey][wordOff](selectedPower);
+
+        setTimeout(() => {
+            gridSystem.emitToUsers('sendMatrix');
+        }, duration + 1000);
+
+    });
+
+    sock.on('grantPower', data => {
+
+        const playerObjectKey = getPlayerObjectKey(data.studentId);
+        const powerListKey = parseInt(data.getNum);
+
+        if (gridSystem[playerObjectKey] === undefined) return;
+        if(gridSystem.powerList[powerListKey] === undefined) return;
+        gridSystem[playerObjectKey].obtainedPowers.push(gridSystem.powerList[powerListKey]);
+
+        io.emit('updatePowerArray', gridSystem.playersArr);
+
+    });
+
+    sock.on('pushPowerArray', data => {
+        const getPlayerObject = gridSystem.playersArr.find(object => object.id === data);
+        const obtainedPowers = getPlayerObject.obtainedPowers;
+        const studentId = data; 
+        sock.emit('updatePowerArray', obtainedPowers);
     });
 
 

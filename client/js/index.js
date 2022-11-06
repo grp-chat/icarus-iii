@@ -78,6 +78,7 @@ let chatObjectsArr = [];
 let missionObjectArr = [];
 let matrixLengthXAxis = 0;
 let matrixLengthYAxis = 0;
+//let obtainedPowersArr = [];
 
 //GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
 
@@ -135,7 +136,12 @@ function createChatDivs() {
         const message = `${nickname}: ${chatInput.value}`;
         const message2 = chatInput.value;
         sock.emit('chat-to-server', message);
-        sock.emit('createChatObject', { message2, nickname });
+        if (message2 === "") {
+            sock.emit('clearChatObject', nickname)
+        } else {
+            sock.emit('createChatObject', { message2, nickname });
+        }
+        
         chatInput.value = '';
     });
 
@@ -167,6 +173,17 @@ function openModal() {
     if (modal === null) return
     modal.classList.add('active');
     overlay.classList.add('active');
+}
+function requestPowerArray() {
+    sock.emit('pushPowerArray', nickname);
+}
+function loadObtainedPowersToModal(powersArr) {
+    
+    modalHeader.innerHTML = `${nickname} - Obtained Powers`;
+    modalBody.innerHTML = "";
+    powersArr.forEach((power, index) => {
+        modalBody.innerHTML +=`${index + 1}: ${power.title} <br>`;
+    });
 }
 function loadListToModal() {
     modalHeader.innerHTML = "Trigger list";
@@ -215,6 +232,10 @@ closeModalButton.addEventListener('click', () => {
     closeModal();
 });
 
+overlay.addEventListener('click', () => {
+    closeModal();
+});
+
 document.addEventListener("keydown", (e) => {
     if ([37, 38, 39, 40].indexOf(e.keyCode) > -1) {
         e.view.event.preventDefault();
@@ -242,6 +263,7 @@ sock.on('createChatObject', data => {
     // if (matrixAreaRenderingHere === data.area) { 
     // }
     
+    
     const getChatObject = chatObjectsArr.find(chatObj => chatObj.id === data.id);
     // console.log(chatObjectsArr.length);
     if (!getChatObject) {
@@ -262,6 +284,11 @@ sock.on('createChatObject', data => {
         chatObjectsArr[index].char = "";
         chatObjectsArr[index].typeWriter();
     }
+});
+sock.on('clearChatObject', data => {
+    const getChatObject = chatObjectsArr.find(chatObj => chatObj.id === data.id);
+    chatObjectsArr.splice(chatObjectsArr.indexOf(getChatObject), 1);
+    sock.emit('refreshCanvas');
 });
 sock.on('missionObject', data => {
     missionObjectArr = [];
@@ -303,10 +330,11 @@ sock.on('sendMatrix', (data) => {
         canvas.remove();
     });
 
-    clientRender(data);
-    
+    clientRender(data); 
+
     chatObjectsArr.forEach(chatObj => {
         const getPlayerObject = data.playersArr.find(object => object.id === chatObj.id);
+        
         chatObj.x = getPlayerObject.x;
         chatObj.y = getPlayerObject.y;
         chatObj.area = getPlayerObject.area;
@@ -322,4 +350,9 @@ sock.on('sendMatrix', (data) => {
     //timerObject.runTimer();
     
     // typeWriterRender();
+});
+
+sock.on('updatePowerArray', data => {
+    
+    loadObtainedPowersToModal(data);
 });

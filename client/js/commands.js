@@ -57,6 +57,24 @@ class localFixedCommand {
         //this.localFunc();
     }
 }
+class localFreeCommand {
+    constructor (prefix, localFunc) {
+        this.prefix = prefix; 
+        this.localFunc = localFunc;
+    }
+
+    executeCommand(message) {
+        if (message.slice(0, this.prefix.length) != this.prefix) {return}
+        //legendModal();
+        //openModal();
+        
+        if (this.prefix === `${nickname}: info`) {
+            //loadObtainedPowersToModal();
+            requestPowerArray();
+        }
+        this.localFunc();
+    }
+}
 
 class forceClientRefreshCommand {
     constructor(prefix, sockEmitFlag) {
@@ -103,6 +121,7 @@ class idCommand {
 
     }
 }
+
 class freeNumCommand {
     constructor(prefix, sockEmitFlag) {
         this.prefix = prefix;
@@ -176,6 +195,8 @@ class numAndIdCommand {
 const allCommands = [
     new idCommand("TCR: winner ", 'winner'),
     new freeNumCommand(nickname + ": pw ", 'unlockUsingPassword'),
+    new freeNumCommand(nickname + ": use power ", 'usePower'),
+    new numAndIdCommand("TCR: grant power ", 'grantPower'),
     new idCommand("TCR: mind control ", 'mindControl'),
     new numAndIdCommand("TCR: +", 'addSteps'),
     new numAndIdCommand("TCR: good ", 'sendPW'),
@@ -192,6 +213,7 @@ const allCommands = [
     new multiNumCommand("TCR: set sign ", 'setSignTime'),
     new numAndIdCommand("TCR: use ", 'useItem'),
     new localFixedCommand("TCR: list", openModal),
+    new localFreeCommand(nickname + ": info", openModal),
     new idCommand("TCR: go a2 ", 'teleportPlayerArea2'),
     new idCommand("TCR: go a1 ", 'teleportPlayerMainArea'),
     new idCommand("TCR: go a3 ", 'teleportPlayerArea3'),
